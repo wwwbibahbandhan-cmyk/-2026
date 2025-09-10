@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>বিবাহ বন্ধন 2026</title>
+  <meta name="description" content="Bandhan – Modern matrimony website UI (frontend only)">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#faf7f5;
+      --card:#ffffff;
+      --text:#1d1b1b;
+      --muted:#6b6464;
+      --brand:#8b1e3f;   /* deep maroon */
+      --brand-2:#f0b429; /* warm gold */
+      --ring: rgba(139,30,63,.25);
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;color:var(--text);background:#b4ffd1;}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1150px;margin:0 auto;padding:0 20px}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 1.1rem;border-radius:999px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:.2s ease;}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),#5e0e27);color:#fff;}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(139,30,63,.35)}
+    .btn-ghost{background:#fff;border-color:#eee}
+    .btn-ghost:hover{background:#fafafa}
+
+    /* NAV */
+    .nav{position:sticky;top:0;z-index:50; color: #ffffff;background:rgb(221, 0, 55);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid #eee}
+    .nav .wrap{display:flex;align-items:center;justify-content:space-between;padding:1px 0}
+    .brand{display:flex;align-items:center;gap:.7rem;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:36px;height:36px;border-radius:12px;background:conic-gradient(from 180deg at 50% 50%, var(--brand), var(--brand-2));box-shadow:-2px 2px 5px rgb(255, 255, 255)}
+    .nav-links{display:flex;gap:18px}
+    .nav a{font-weight:600;color:rgb(255, 255, 255);}
+
+    .header-search{display:flex;align-items:center;margin-left:20px}
+    .header-search input{padding:6px 10px;border-radius:20px;border:1px solid #ccc;outline:none}
+    .header-search button{margin-left:6px;padding:6px 12px;border:none;border-radius:20px;background:#8b1e3f;color:#fff;cursor:pointer}
+    .header-search button:hover{background:#6b1430}
+    
+    .btn-search{padding:6px 14px;border-radius:20px;background:#8b1e3f;color:#fff;text-decoration:none;font-weight:600}
+    .btn-search:hover{background:#6b1430}
+
+
+
+    /* HERO */
+    .hero{position:relative;padding:60px 0 26px}
+    .hero .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
+    .badge{display:inline-flex;align-items:center;gap:.5rem;background:#fff;border:1px solid #eee;padding:.45rem .75rem;border-radius:999px;font-weight:600;color:#5b3c3c}
+    .title{font-size:clamp(2rem,3.4vw,3rem);line-height:1.08;margin:.7rem 0 .6rem;font-weight:800}
+    .subtitle{color:var(--muted);max-width:55ch}
+
+    .search-card{margin-top:26px;background:#fff;border:1px solid #eee;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    .filters{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:.8rem;font-weight:700;color:#5b4d4d}
+    .field input,.field select{appearance:none;padding:.7rem .8rem;border:1px solid #e8e3e3;border-radius:12px;background:#fff;font:inherit}
+
+    /* PROFILES */
+    .section{padding:34px 0}
+    .section h2{font-size:1.4rem;margin:6px 0 14px}
+    .grid-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .card{background:var(--card);border:1px solid #eee;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .cover{aspect-ratio:4/3;background:linear-gradient(135deg,#fff3f6,#ffeccf);display:flex;align-items:center;justify-content:center;position:relative}
+    .avatar{width:200px;height:250px;border-radius:12px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:700;color:#8b1e3f;}
+    .pill{position:absolute;left:12px;top:12px;background:#fff;border:1px solid #eee;border-radius:999px;font-size:.72rem;padding:.32rem .6rem;font-weight:700;color:#684}
+    .content{padding:14px}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+    .meta span{font-size:.82rem;background:#fafafa;border:1px solid #eee;border-radius:999px;padding:.28rem .6rem}
+    .actions{margin-top:auto;display:flex;gap:8px;padding:12px}
+    .actions .btn{flex:1;justify-content:center}
+
+    /* SIDEPANEL */
+    .panel{position:sticky;top:80px;background:#fff;border:1px solid #eee;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;height:max-content}
+    .panel h3{margin:0 0 10px;font-size:1.05rem}
+    .panel .stack{display:grid;gap:10px}
+
+    /* LAYOUT */
+    .browse{display:grid;grid-template-columns:280px 1fr;gap:18px}
+
+    /* TESTIMONIALS */
+    .testimonials{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .quote{background:#fff;border:1px solid #eee;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    .quote p{color:#554}
+
+    /* FOOTER */
+    footer{margin-top:28px;background:#12090c;color:#eee}
+    footer .wrap{padding:28px 0;display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
+    footer small{color:#beb7b7}
+    footer .address {margin-top:10px;font-size:.9rem;color:#beb7b7;line-height:1.5;}
+    .footer-col{margin-bottom:12px}
+    .footer-company strong{display:block;margin-bottom:8px;font-weight:700;color:#fff;text-decoration:underline}
+    .footer-links{list-style:none;padding:0;margin:0;line-height:1.9}
+    .footer-links li a{color:#e8dede;text-decoration:none;font-size:.95rem;transition:.15s}
+    .footer-links li a:hover{color:#fff;text-decoration:underline}
+
+
+    /* MODAL */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;margin-top: 92px; justify-content:center;padding:14px}
+    .modal.open{display:flex}
+    .sheet{width:min(880px,95vw);background:#5fe4ff;border-radius:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;border:1px solid #3c00ff}
+    .sheet header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #0f01a9;background:linear-gradient(135deg,#ff00e6,#ff5500)}
+    .sheet h3{margin:0;font-size:1.15rem}
+    .sheet .body{padding:14px 18px}
+    .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .form-grid .full{grid-column:1/-1}
+    .sheet {
+  width: min(880px, 95vw);
+  max-height: 90vh;   /* limit height of modal */
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet .body {
+  flex: 1;
+  overflow-y: auto;   /* enable vertical scroll */
+  max-height: calc(90vh - 60px); /* header height adjustment */
+}
+
+    .error{outline:2px solid #ffb4b4;box-shadow:0 0 0 4px rgba(255,98,98,.18)}
+    .toast{position:fixed;bottom:18px;right:18px;background:#111;color:#fff;padding:.7rem 1rem;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.25s}
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    @media (max-width: 1000px){
+      .hero .grid{grid-template-columns:1fr}
+      .browse{grid-template-columns:1fr}
+      .grid-cards{grid-template-columns:repeat(2,1fr)}
+      .testimonials{grid-template-columns:1fr}
+      footer .wrap{grid-template-columns:1fr}
+    }
+    @media (max-width: 520px){
+      .filters{grid-template-columns:1fr 1fr}
+      .form-grid{grid-template-columns:1fr}
+      .grid-cards{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="nav">
+  <div class="container wrap">
+    <div class="brand"><div class="logo"></div><span><h1>বিবাহ বন্ধন 2026</h1></span></div>
+    
+    <!-- 🔍 Search bar -->
+    <form id="headerSearch" class="header-search">
+      <input type="text" name="q" placeholder="Search profiles…" />
+      <a href="search.html" class="btn-search">🔍</a>
+    </form>
+    <div class="nav-links">
+      <a href="#join" id="openJoin">CREATE PROFILE</a>
+      <a href="#browse">BROWSE</a>
+      <a href="#stories">STORIES</a>
+      <a href="about.html">ABOUT</a>
+      <a href="contact.html">CONTACT US</a>
+      <a href="admin.html">ADMIN</a>
+    </div>
+  </div>
+</nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container grid">
+      <div>
+        <span class="badge">Trusted Indian Matrimony • Est. 2026</span>
+        <h1 class="title">Find your perfect match with confidence.</h1>
+        <p class="subtitle">Discover verified profiles by community, profession and interests. Powerful filters, quick shortlist, and a clean experience you’ll love.</p>
+        <div class="search-card">
+          <form id="quickSearch" class="filters">
+            <div class="field">
+              <label>Looking for</label>
+              <select name="seeking">
+                <option value="bride">Bride</option>
+                <option value="groom">Groom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Age (Min)</label>
+              <input name="ageMin" type="number" min="18" max="70" value="22"/>
+            </div>
+            <div class="field">
+              <label>Age (Max)</label>
+              <input name="ageMax" type="number" min="18" max="70" value="30"/>
+            </div>
+            <div class="field">
+              <label>Religion</label>
+              <select name="religion">
+                <option value="">Any</option>
+                <option>Hindu</option>
+                <option>Muslim</option>
+                <option>Sikh</option>
+                <option>Christian</option>
+                <option>Jain</option>
+                <option>Buddhist</option>
+                <option>Parsi</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Community</label>
+              <input name="community" placeholder="e.g., Brahmin"/>
+            </div>
+            <div class="field">
+              <label>Location</label>
+              <input name="location" placeholder="City / State"/>
+            </div>
+          </form>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+            <a href="search.html" class="btn btn-primary" id="applySearch">Apply Search</a>
+            <button type="reset" class="btn btn-ghost" id="resetSearch">Reset</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <img src="cp.png" alt="Bandhan Matrimony Logo" 
+        style="width:100%;max-width:1200px;">
+
+      </div>
+    </div>
+  </section>
+
+  <!-- BROWSE SECTION -->
+  <section class="section" id="browse">
+    <div class="container browse">
+      <!-- Side panel filters (static demo) -->
+      <aside class="panel">
+        <h3>Refine search</h3>
+        <div class="stack">
+          <div class="field"><label>Education</label><select id="fEducation"><option value="">Any</option><option>B.Tech</option><option>MBA</option><option>MCA</option><option>MBBS</option></select></div>
+          <div class="field"><label>Profession</label><select id="fProfession"><option value="">Any</option><option>Software</option><option>Finance</option><option>Business</option><option>Govt Service</option></select></div>
+          <div class="field"><label>Diet</label><select id="fDiet"><option value="">Any</option><option>Vegetarian</option><option>Eggetarian</option><option>Non-Veg</option></select></div>
+          <div class="field"><label>Marital Status</label><select id="fStatus"><option value="">Any</option><option>Never Married</option><option>Divorced</option><option>Widowed</option></select></div>
+        </div>
+      </aside>
+
+      <!-- Profiles grid -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h2>Featured Profiles</h2>
+          <button class="btn btn-primary" id="openJoin2">Create Your Profile</button>
+        </div>
+        <div class="grid-cards" id="cards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STORIES -->
+  <section class="section" id="stories">
+    <div class="container">
+      <h2>Happy Stories</h2>
+      <div class="testimonials">
+        <div class="quote"><strong>Riya & Arjun</strong><p>We matched within a week and our families clicked instantly. Thank you Bandhan for a smooth experience!</p></div>
+        <div class="quote"><strong>Ananya & Karan</strong><p>The filters helped us find exactly what we were looking for. Highly recommended.</p></div>
+        <div class="quote"><strong>Meera & Sahil</strong><p>Verified profiles gave us confidence. We tied the knot in March 2026 ❤</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+<footer>
+  <div class="container wrap">
+    <div>
+      <div class="brand" style="margin-bottom:8px">
+        <div class="logo"></div><span>Bandhan</span>
+      </div>
+      <small>© 2026 Bandhan Matrimony. Frontend demo UI. No real user data.</small>
+      <p class="address">📍 2nd Floor, Matrimony Plaza,<br> MG Road, Bengaluru, Karnataka - 560001</p>
+    </div>
+
+    <div class="footer-col footer-company">
+      <strong>COMPANY</strong>
+      <ul class="footer-links">
+        <li><a href="about.html">About</a></li>
+        <li><a href="careers.html">Careers</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <strong>LEGAL</strong><br/>
+      <p><small><a href="terms.html">Terms</a> <br> <a href="privacy.html">Privacy</a></small></p>
+    </div>
+  </div>
+</footer>
+
+
+
+  <!-- CREATE PROFILE MODAL -->
+  <div class="modal" id="joinModal" aria-hidden="true" role="dialog" aria-label="Create Profile">
+    <div class="sheet">
+      <header>
+        <h3>Create Your Profile</h3>
+        <button class="btn btn-ghost" id="closeJoin">Close</button>
+      </header>
+      <div class="body">
+        <form id="joinForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label>Full Name</label>
+              <input name="fullName" required placeholder="e.g., Priya Sharma" />
+            </div>
+            <div class="field">
+              <label>Profile For</label>
+              <select name="profileFor" required>
+                <option>Self</option><option>Son</option><option>Daughter</option><option>Relative</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Gender</label>
+              <select name="gender" required><option>Female</option><option>Male</option><option>Other</option></select>
+            </div>
+
+            <div class="field">
+              <label>Date of Birth</label>
+              <input type="date" name="dob" required />
+            </div>
+            <div class="field">
+              <label>Father's Name</label>
+              <input name="fatherName" placeholder="e.g., Rajesh Sharma" />
+            </div>
+            <div class="field">
+              <label>Mother's Name</label>
+              <input name="motherName" placeholder="e.g., Sunita Sharma" />
+            </div>
+            <div class="field">
+              <label>Height (cm)</label>
+              <input type="number" name="height" min="120" max="220" />
+            </div>
+            <div class="field">
+              <label>Marital Status</label>
+              <select name="maritalStatus" required><option>Never Married</option><option>Divorced</option><option>Widowed</option></select>
+            </div>
+
+            <div class="field">
+              <label>Religion</label>
+              <select name="religion"><option>-select-</option><option>Hindu</option><option>Muslim</option><option>Sikh</option><option>Christian</option><option>Jain</option><option>Buddhist</option><option>Parsi</option></select>
+            </div>
+            <div class="field">
+              <label>Community / Caste</label>
+              <select name="community">
+                <option>-select-</option>
+                <option>Brahmin</option>
+                <option>Kshatriya</option>
+                <option>Vaishya</option>
+                <option>Kayastha</option>
+                <option>Reddy</option>
+                <option>Nair</option>
+                <option>Khatri</option>
+                <option>Baniya</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Mother Tongue</label>
+              <select name="motherTongue">
+                <option>-select-</option>
+                <option>Hindi</option>
+                <option>English</option>
+                <option>Marathi</option>
+                <option>Bengali</option>
+                <option>Tamil</option>
+                <option>Telugu</option>
+                <option>Kannada</option>
+                <option>Gujarati</option>
+                <option>Punjabi</option>
+                <option>Malayalam</option>
+                <option>Odia</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Education</label>
+              <input name="education" placeholder="e.g., B.Tech, MBA" />
+            </div>
+            <div class="field">
+              <label>Occupation</label>
+              <select name="occupation">
+                <option>-select-</option>
+                <option>Software Engineer</option>
+                <option>Doctor</option>
+                <option>Chartered Accountant</option>
+                <option>Business</option>
+                <option>Finance</option>
+                <option>Government Service</option>
+                <option>Teacher</option>
+                <option>Lawyer</option>
+                <option>Research</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Annual Income (₹)</label>
+              <select name="income">
+                <option>-select-</option>
+                <option>0 - 3 Lakh</option>
+                <option>3 - 6 Lakh</option>
+                <option>6 - 10 Lakh</option>
+                <option>10 - 20 Lakh</option>
+                <option>20 - 40 Lakh</option>
+                <option>40+ Lakh</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Village/City</label>
+              <input name="city" placeholder="e.g., Tapan" />
+            </div>
+            <div class="field">
+              <label>Police Station</label>
+              <input name="policestation" placeholder="e.g., Balurghat" />
+            </div>
+            <div class="field">
+              <label>State</label>
+              <select name="state">
+                <option>-select-</option>
+                <option>Maharashtra</option>
+                <option>Karnataka</option>
+                <option>Tamil Nadu</option>
+                <option>Kerala</option>
+                <option>Delhi</option>
+                <option>Uttar Pradesh</option>
+                <option>Madhya Pradesh</option>
+                <option>Rajasthan</option>
+                <option>Punjab</option>
+                <option>Haryana</option>
+                <option>Gujarat</option>
+                <option>Bihar</option>
+                <option>West Bengal</option>
+                <option>Telangana</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Pin</label>
+              <input type="pin" name="pin" placeholder="6-digit" pattern="[0-9]{6}" />
+            </div>
+            <div class="field">
+              <label>Contact Email</label>
+              <input type="email" name="email" required placeholder="name@example.com" />
+            </div>
+
+            <div class="field">
+              <label>Phone</label>
+              <input type="tel" name="phone" placeholder="10-digit" pattern="[0-9]{10}" />
+            </div>
+            <div class="field">
+              <label>Diet</label>
+              <select name="diet">
+                <option>-select-</option>
+                <option>Vegetarian</option>
+                <option>Eggetarian</option>
+                <option>Non-Veg</option>
+                <option>Vegan</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>About Me</label>
+              <input name="about" placeholder="Short introduction" />
+            </div>
+            <div class="field full">
+              <label>Partner Preferences</label>
+              <input name="preferences" placeholder="Age, location, education, etc." />
+            </div>
+            <div class="field full">
+              <label>Upload Photo</label>
+              <input type="file" id="photo" name="photo" accept="image/*" onchange="previewPhoto(event)">
+              <div id="photoPreview" style="margin-top:10px"></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+            <button type="button" class="btn btn-ghost" id="cancelJoin">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save Profile</button>
+          </div>
+          <small style="display:block;margin-top:6px;color:#6b6464">Frontend only. After we integrate Google Sheets, this will save to a sheet.</small>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved! (Demo)</div>
+
+  <!-- VIEW PROFILE MODAL -->
+  <div class="modal" id="profileModal" aria-hidden="true">
+  <div class="sheet">
+    <header>
+      <h3 id="profileName">Profile Details</h3>
+      <button class="btn btn-ghost" onclick="closeProfile()">Close</button>
+    </header>
+    <div class="body" id="profileBody">
+      <!-- Profile content will be injected here -->
+    </div>
+  </div>
+  </div>
+
+
+  <script>
+// --- Load profiles dynamically from localStorage ---
+let profiles = JSON.parse(localStorage.getItem("bandhanProfiles") || "[]");
+
+// fallback demo data...
+if (!profiles.length) {
+  profiles = [
+    {id:"BND1001", fullName:"Priya Sharma", age:26, city:"Mumbai", state:"Maharashtra", height:163, education:"MBA", occupation:"Marketing", religion:"Hindu", community:"Brahmin", verified:true},
+    {id:"BND1002", fullName:"Ananya Gupta", age:24, city:"Delhi", state:"Delhi", height:160, education:"B.Tech", occupation:"Software", religion:"Hindu", community:"Baniya", verified:true}
+  ];
+}
+
+const cardsEl = document.getElementById('cards');
+
+// --- Card template ---
+function cardTemplate(p){
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="cover">
+      <div class="pill">${p.verified? '✔ Verified':'New'}</div>
+      <div class="avatar">
+        ${p.photo 
+          ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+          : (p.fullName || "NA").split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+      </div>
+    </div>
+    <div class="content">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <strong>${p.fullName || "Unknown"}</strong>
+        <small style="color:#6b6464">${p.id ? "#" + p.id : ""}</small>
+      </div>
+      <div class="meta">
+        ${p.age? `<span>${p.age} yrs</span>`:""}
+        ${p.height? `<span>${p.height} cm</span>`:""}
+        <span>${p.city||""}${p.state? ', '+p.state:""}</span>
+      </div>
+      <div class="meta" style="margin-top:0">
+        ${p.education? `<span>${p.education}</span>`:""}
+        ${p.occupation? `<span>${p.occupation}</span>`:""}
+        ${p.religion? `<span>${p.religion}${p.community? ' · '+p.community:''}</span>`:""}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-action="shortlist">Shortlist</button>
+      <button class="btn btn-primary" data-action="view">View</button>
+    </div>`;
+  el.querySelector('[data-action="view"]').addEventListener('click',()=>openProfile(p));
+  el.querySelector('[data-action="shortlist"]').addEventListener('click', (e)=>{
+    e.target.textContent = 'Shortlisted ✓';
+    e.target.disabled = true;
+    toast('Added to shortlist');
+  });
+  return el;
+}
+
+function render(list, limitDefault=true){
+  cardsEl.innerHTML = '';
+  const displayList = (limitDefault && list.length > 8) ? list.slice(0,8) : list;
+  displayList.forEach(p=>cardsEl.appendChild(cardTemplate(p)));
+
+  if(limitDefault && list.length > 8){
+    const note = document.createElement("div");
+    note.style.textAlign = "center";
+    note.style.marginTop = "12px";
+    note.innerHTML = `<small style="color:#666">Showing 8 featured profiles. Use search to see more.</small>`;
+    cardsEl.appendChild(note);
+  }
+}
+render(profiles);
+
+// --- Quick search ---
+const qForm = document.getElementById('quickSearch');
+document.getElementById('applySearch').addEventListener('click', ()=>{
+  const fd = new FormData(qForm);
+  const q = Object.fromEntries(fd.entries());
+  const out = profiles.filter(p => {
+    if(q.seeking && p.seeking !== q.seeking) return false;
+    if(q.ageMin && p.age < +q.ageMin) return false;
+    if(q.ageMax && p.age > +q.ageMax) return false;
+    if(q.religion && p.religion !== q.religion) return false;
+    if(q.community && !p.community.toLowerCase().includes(q.community.toLowerCase())) return false;
+    if(q.location){
+      const t = (p.city + ' ' + p.state).toLowerCase();
+      if(!t.includes(q.location.toLowerCase())) return false;
+    }
+    return true;
+  });
+  render(out, false);
+});
+document.getElementById('resetSearch').addEventListener('click', ()=>{ qForm.reset(); render(profiles); });
+
+// --- Profile modal open/close ---
+function openProfile(p){
+  document.getElementById("profileName").textContent = p.fullName || "Profile";
+  document.getElementById("profileBody").innerHTML = `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:2;min-width:260px">
+        <p><strong>Age:</strong> ${p.age||""} yrs</p>
+        <p><strong>Height:</strong> ${p.height||""} cm</p>
+        <p><strong>Gender:</strong> ${p.gender||""}</p>
+        <p><strong>Religion:</strong> ${p.religion||""} ${p.community? " • "+p.community:""}</p>
+        <p><strong>Mother Tongue:</strong> ${p.motherTongue||""}</p>
+        <p><strong>Diet:</strong> ${p.diet||""}</p>
+        <p><strong>Education:</strong> ${p.education||""}</p>
+        <p><strong>Occupation:</strong> ${p.occupation||""}</p>
+        <p><strong>Income:</strong> ${p.income||""}</p>
+        <p><strong>City:</strong> ${p.city||""}, ${p.state||""}</p>
+        <p><strong>About:</strong> ${p.about||""}</p>
+        <p><strong>Preferences:</strong> ${p.preferences||""}</p>
+      </div>
+      <div style="flex:1;min-width:220px;max-width:280px;text-align:center">
+        ${p.photo 
+          ? `<img src="${p.photo}" alt="${p.fullName}" style="width:100%;border-radius:18px;box-shadow:0 4px 12px rgba(0,0,0,.2)">`
+          : `<div class="avatar" style="margin:auto;font-size:2rem;width:140px;height:180px">
+              ${(p.fullName||"NA").split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+             </div>`}
+      </div>
+    </div>`;
+  document.getElementById("profileModal").classList.add("open");
+}
+function closeProfile(){ document.getElementById("profileModal").classList.remove("open"); }
+const profileModal = document.getElementById("profileModal");
+profileModal.addEventListener("click", e=>{ if(e.target===profileModal) closeProfile(); });
+window.addEventListener("keydown", e=>{ if(e.key==="Escape") closeProfile(); });
+
+// --- Modal: Create Profile ---
+const joinModal = document.getElementById('joinModal');
+document.getElementById('openJoin').addEventListener('click', ()=> joinModal.classList.add('open'));
+document.getElementById('openJoin2').addEventListener('click', ()=> joinModal.classList.add('open'));
+document.getElementById('cancelJoin').addEventListener('click', ()=> joinModal.classList.remove('open'));
+document.getElementById('closeJoin').addEventListener('click', ()=> joinModal.classList.remove('open'));
+joinModal.addEventListener('click', (e)=>{ if(e.target===joinModal) joinModal.classList.remove('open'); });
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') joinModal.classList.remove('open'); });
+
+// --- Save profile ---
+const joinForm = document.getElementById('joinForm');
+joinForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const fd = new FormData(joinForm);
+  const data = Object.fromEntries(fd.entries());
+  data.age = calculateAge(data.dob);
+  let ok = true;
+  ['fullName','gender','dob','email'].forEach(n=>{
+    const el = joinForm.elements[n];
+    if(!el || !el.value){ el.classList.add('error'); ok=false; }
+    else el.classList.remove('error');
+  });
+  if(!ok){ toast('Please fill required fields'); return; }
+  data.id = "BND" + String(Math.floor(1000 + Math.random()*9000));
+  const photoFile = document.getElementById('photo').files[0];
+  if (photoFile) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      data.photo = e.target.result;
+      saveProfile(data);
+    };
+    reader.readAsDataURL(photoFile);
+  } else {
+    saveProfile(data);
+  }
+});
+
+function saveProfile(profile){
+  if(profile.dob){ profile.age = calculateAge(profile.dob); }
+  profiles.push(profile);
+  localStorage.setItem("bandhanProfiles", JSON.stringify(profiles));
+  render(profiles);
+  toast('Profile saved!');
+  joinModal.classList.remove('open');
+  joinForm.reset();
+  document.getElementById('photoPreview').innerHTML = '';
+}
+
+// --- Toast ---
+const toastEl = document.getElementById('toast');
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 2000);
+}
+
+// --- Preview photo ---
+function previewPhoto(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('photoPreview').innerHTML =
+        `<img src="${e.target.result}" alt="Profile Photo"
+          style="max-width:120px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.2)">`;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// --- Age calculation ---
+function calculateAge(dob){
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
+  return age;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Search Profiles - Bandhan Matrimony</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;font-family:Inter,sans-serif;background:#faf7f5;color:#222;}
+    .container{max-width:1150px;margin:0 auto;padding:0 20px}
+    .nav{position:sticky;top:0;background:#8b1e3f;color:#fff;z-index:50;}
+    .nav .wrap{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+    .nav a{color:#fff;font-weight:600;text-decoration:none;margin:0 10px}
+    h2{margin:20px 0 10px}
+    .filters{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+    .filters .field{display:flex;flex-direction:column;font-size:.85rem}
+    .filters input,.filters select{padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:inherit}
+    .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+    .card{background:#fff;border:1px solid #eee;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.08);overflow:hidden;display:flex;flex-direction:column}
+    .cover{aspect-ratio:4/3;background:#f3f3f3;display:flex;align-items:center;justify-content:center;position:relative}
+    .avatar{width:200px;height:200px;border-radius:12px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:700;color:#8b1e3f;}
+    .pill{position:absolute;top:10px;left:10px;background:#fff;padding:4px 8px;border-radius:12px;font-size:.75rem;font-weight:600}
+    .content{padding:14px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.85rem;margin:6px 0}
+    .meta span{background:#f9f9f9;border:1px solid #eee;border-radius:999px;padding:2px 8px}
+    .actions{margin-top:auto;padding:12px;display:flex;gap:8px}
+    .btn{flex:1;padding:8px;border-radius:8px;font-weight:600;border:none;cursor:pointer}
+    .btn-ghost{background:#f9f9f9}
+    .btn-primary{background:#8b1e3f;color:#fff}
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+    .modal.open{display:flex}
+    .sheet{background:#fff;border-radius:18px;max-width:850px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+    .sheet header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#8b1e3f;color:#fff;}
+    .sheet .body{padding:20px;display:flex;gap:20px;flex-wrap:wrap}
+    .sheet img{max-width:300px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .sheet .info{flex:1;min-width:240px}
+    footer{margin-top:30px;background:#12090c;color:#eee}
+    footer .wrap{padding:28px 0;display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
+    footer strong{display:block;margin-bottom:8px;text-decoration:underline}
+    footer a{color:#ddd;text-decoration:none}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="container wrap">
+    <div><strong>বিবাহ বন্ধন 2026</strong></div>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="search.html">Search</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- SEARCH FILTERS -->
+<div class="container">
+  <h2>Search Profiles</h2>
+  <form id="filterForm" class="filters">
+    <div class="field">
+      <label>Age Min</label>
+      <input type="number" name="ageMin" min="18" max="70">
+    </div>
+    <div class="field">
+      <label>Age Max</label>
+      <input type="number" name="ageMax" min="18" max="70">
+    </div>
+    <div class="field">
+      <label>Gender</label>
+      <select name="gender">
+        <option value="">Any</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Religion</label>
+      <select name="religion">
+        <option value="">Any</option>
+        <option>Hindu</option>
+        <option>Muslim</option>
+        <option>Sikh</option>
+        <option>Christian</option>
+        <option>Jain</option>
+        <option>Buddhist</option>
+        <option>Parsi</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>City</label>
+      <input type="text" name="city" placeholder="e.g., Delhi">
+    </div>
+    <div style="align-self:flex-end">
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+</div>
+
+<!-- SEARCH RESULTS -->
+<div class="container">
+  <div class="grid-cards" id="cards"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container wrap">
+    <div>
+      <strong>COMPANY</strong>
+      <p>© 2026 Bandhan Matrimony</p>
+      <p>📍 2nd Floor, Matrimony Plaza,<br>MG Road, Bengaluru</p>
+    </div>
+    <div>
+      <strong>LEGAL</strong>
+      <a href="terms.html">Terms</a><br>
+      <a href="privacy.html">Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<!-- PROFILE MODAL -->
+<div class="modal" id="profileModal">
+  <div class="sheet">
+    <header>
+      <h3 id="profileName">Profile</h3>
+      <button onclick="closeProfile()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">✖</button>
+    </header>
+    <div class="body" id="profileBody"></div>
+  </div>
+</div>
+
+<script>
+let profiles = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+
+const cardsEl = document.getElementById("cards");
+
+function cardTemplate(p){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="cover">
+      <div class="pill">${p.verified? "✔ Verified":"New"}</div>
+      <div class="avatar">
+        ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : (p.fullName||"NA").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase()}
+      </div>
+    </div>
+    <div class="content">
+      <strong>${p.fullName||"Unknown"}</strong>
+      <div class="meta">
+        ${p.age? `<span>${p.age} yrs</span>`:""}
+        ${p.height? `<span>${p.height} cm</span>`:""}
+        <span>${p.city||""}${p.state? ", "+p.state:""}</span>
+      </div>
+      <div class="meta">
+        ${p.education? `<span>${p.education}</span>`:""}
+        ${p.occupation? `<span>${p.occupation}</span>`:""}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-action="shortlist">Shortlist</button>
+      <button class="btn btn-primary" data-action="view">View</button>
+    </div>`;
+  el.querySelector('[data-action="view"]').addEventListener("click",()=>openProfile(p));
+  return el;
+}
+
+function render(list){
+  cardsEl.innerHTML = "";
+  if(!list.length){
+    cardsEl.innerHTML = "<p>No profiles found.</p>";
+    return;
+  }
+  list.forEach(p=>cardsEl.appendChild(cardTemplate(p)));
+}
+render(profiles);
+
+// Search filter
+document.getElementById("filterForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const f = Object.fromEntries(fd.entries());
+  const results = profiles.filter(p=>{
+    if(f.ageMin && p.age < +f.ageMin) return false;
+    if(f.ageMax && p.age > +f.ageMax) return false;
+    if(f.gender && p.gender !== f.gender) return false;
+    if(f.religion && p.religion !== f.religion) return false;
+    if(f.city && !(p.city||"").toLowerCase().includes(f.city.toLowerCase())) return false;
+    return true;
+  });
+  render(results);
+});
+
+// Profile modal
+function openProfile(p){
+  document.getElementById("profileName").textContent = p.fullName||"Profile";
+  document.getElementById("profileBody").innerHTML = `
+    <img src="${p.photo||""}" alt="photo">
+    <div class="info">
+      <p><strong>Age:</strong> ${p.age||""}</p>
+      <p><strong>Gender:</strong> ${p.gender||""}</p>
+      <p><strong>Religion:</strong> ${p.religion||""}</p>
+      <p><strong>Education:</strong> ${p.education||""}</p>
+      <p><strong>Occupation:</strong> ${p.occupation||""}</p>
+      <p><strong>City:</strong> ${p.city||""}, ${p.state||""}</p>
+      <p><strong>About:</strong> ${p.about||""}</p>
+    </div>
+  `;
+  document.getElementById("profileModal").classList.add("open");
+}
+function closeProfile(){document.getElementById("profileModal").classList.remove("open");}
+</script>
+
+</body>
+</html>

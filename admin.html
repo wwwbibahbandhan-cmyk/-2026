@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Bandhan Admin Panel</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {margin:0;font-family:'Poppins',sans-serif;background:#f5f5f5;color:#222;}
+    .login,.admin {max-width:95%;margin:30px auto;padding:20px;background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);}
+    h2 {margin-top:0;color:#8b1e3f;font-weight:600;}
+    table {width:100%;border-collapse:collapse;margin-top:20px;font-size:0.85rem;}
+    th,td {padding:6px 8px;border:1px solid #ddd;vertical-align:top;}
+    th {background:#8b1e3f;color:#fff;font-weight:500;}
+    .table-thumb {max-width:50px;max-height:50px;border-radius:6px;}
+    /* Make images inside the view modal scale naturally */
+    #viewModal img {width:100%;height:auto;max-height:80vh;display:block;}
+
+    .btn {padding:4px 8px;border-radius:6px;cursor:pointer;border:none;font-weight:600;font-family:inherit;font-size:0.8rem;}
+    .btn-edit {background:#f0b429;color:#000;}
+    .btn-del {background:#e74c3c;color:#fff;}
+    .btn-exp {background:#8b1e3f;color:#fff;margin-top:12px;}
+    .btn-view {background:#3498db;color:#fff;}
+    .btn-ver {background:#2ecc71;color:#fff;}
+    .hidden {display:none;}
+    input[type="password"]{padding:6px 8px;width:200px;border:1px solid #ccc;border-radius:6px;font-family:inherit;}
+    /* simple modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;}
+    .modal.open{display:flex;}
+    .modal-content{background:#fff;padding:20px;border-radius:10px;max-width:600px;width:100%;max-height:90vh;overflow:auto;}
+    .modal-content h3{margin-top:0;color:#8b1e3f;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="loginBox">
+  <h2>🔑 Admin Login</h2>
+  <p>Please enter password:</p>
+  <input type="password" id="adminPass" placeholder="Password">
+  <button class="btn btn-exp" onclick="checkLogin()">Login</button>
+  <p id="loginMsg" style="color:red"></p>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin hidden" id="adminBox">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2>📋 Stored Profiles</h2>
+    <a href="index.html" class="btn btn-exp">🏠 Home</a>
+  </div>
+  <table id="profileTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Profile For</th>
+        <th>Gender</th>
+        <th>DOB</th>
+        <th>City</th>
+        <th>State</th>
+        <th>Phone</th>
+        <th>Verified</th>
+        <th>Photo</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="btn btn-exp" onclick="exportCSV()">⬇ Export CSV</button>
+</div>
+
+
+<!-- Profile modal -->
+<div class="modal" id="viewModal">
+  <div class="modal-content">
+    <h3>Profile Details</h3>
+    <div id="profileDetails"></div>
+    <button class="btn btn-del" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <h3>Edit Profile</h3>
+    <form id="editForm">
+      <div id="editFields"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-del" onclick="closeEdit()">Cancel</button>
+        <button type="submit" class="btn btn-exp">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const PASSWORD = "admin123"; // change this
+let editIndex = null;
+
+function checkLogin(){
+  const pass = document.getElementById("adminPass").value;
+  if(pass === PASSWORD){
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("adminBox").classList.remove("hidden");
+    loadProfiles();
+  } else {
+    document.getElementById("loginMsg").textContent = "❌ Wrong password!";
+  }
+}
+
+// Auto ID generator
+function generateId(existing){
+  let max = 1000;
+  existing.forEach(p=>{
+    if(p.id && p.id.startsWith("BND")){
+      const num = parseInt(p.id.replace("BND",""));
+      if(num>max) max=num;
+    }
+  });
+  return "BND" + (max+1);
+}
+
+function loadProfiles(){
+  const tbody = document.querySelector("#profileTable tbody");
+  tbody.innerHTML = "";
+  let data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+
+  // assign IDs if missing
+  data.forEach(p=>{
+    if(!p.id){ p.id = generateId(data); }
+  });
+  localStorage.setItem("bandhanProfiles", JSON.stringify(data));
+
+  if(!data.length){
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#777;">No profiles stored</td></tr>`;
+    return;
+  }
+
+  data.forEach((p,i)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${p.id||""}</td>
+      <td>${p.fullName||""}</td>
+      <td>${p.profileFor||""}</td>
+      <td>${p.gender||""}</td>
+      <td>${p.dob||""}</td>
+      <td>${p.city||""}</td>
+      <td>${p.state||""}</td>
+      <td>${p.phone||""}</td>
+      <td>${p.verified? "✔ Yes":"❌ No"}</td>
+      <td>${p.photo ? `<img class="table-thumb" src="${p.photo}">` : ""}</td>
+      <td>
+        <button class="btn btn-view" onclick="viewProfile(${i})">View</button>
+        <button class="btn btn-ver" onclick="toggleVerify(${i})">${p.verified? "Unverify":"Verify"}</button>
+        <button class="btn btn-edit" onclick="editProfile(${i})">Edit</button>
+        <button class="btn btn-del" onclick="deleteProfile(${i})">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function viewProfile(i){
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  const p = data[i];
+
+  const details = `
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      <!-- LEFT SIDE DETAILS -->
+      <div style="flex:2;min-width:260px">
+        <p><strong>ID:</strong> ${p.id||""}</p>
+        <p><strong>Name:</strong> ${p.fullName||""}</p>
+        <p><strong>Father's Name:</strong> ${p.fatherName||""}</p>
+        <p><strong>Mother's Name:</strong> ${p.motherName||""}</p>
+        <p><strong>Profile For:</strong> ${p.profileFor||""}</p>
+        <p><strong>Gender:</strong> ${p.gender||""}</p>
+        <p><strong>DOB:</strong> ${p.dob||""}</p>
+        <p><strong>Height:</strong> ${p.height||""}</p>
+        <p><strong>Diet:</strong> ${p.diet||""}</p>
+        <p><strong>Marital Status:</strong> ${p.maritalStatus||""}</p>
+        <p><strong>Religion:</strong> ${p.religion||""}</p>
+        <p><strong>Community:</strong> ${p.community||""}</p>
+        <p><strong>Mother Tongue:</strong> ${p.motherTongue||""}</p>
+        <p><strong>Education:</strong> ${p.education||""}</p>
+        <p><strong>Occupation:</strong> ${p.occupation||""}</p>
+        <p><strong>Income:</strong> ${p.income||""}</p>
+        <p><strong>City:</strong> ${p.city||""}</p>
+        <p><strong>Police Station:</strong> ${p.policestation||""}</p>
+        <p><strong>State:</strong> ${p.state||""}</p>
+        <p><strong>Pin:</strong> ${p.pin||""}</p>
+        <p><strong>Email:</strong> ${p.email||""}</p>
+        <p><strong>Phone:</strong> ${p.phone||""}</p>
+        <p><strong>About:</strong> ${p.about||""}</p>
+        <p><strong>Preferences:</strong> ${p.preferences||""}</p>
+      </div>
+
+      <!-- RIGHT SIDE PHOTO -->
+      <div style="flex:1;min-width:220px;max-width:380px;text-align:center">
+        ${p.photo 
+          ? `<img src="${p.photo}" alt="${p.fullName}" 
+               style="width:100%;height:auto;max-height:80vh;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.25)">`
+          : `<div class="avatar" style="margin:auto;font-size:2rem;width:140px;height:180px">
+              ${(p.fullName||"NA").split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+             </div>`}
+      </div>
+    </div>
+  `;
+
+  document.getElementById("profileDetails").innerHTML = details;
+  document.getElementById("viewModal").classList.add("open");
+}
+
+function closeModal(){
+  document.getElementById("viewModal").classList.remove("open");
+}
+
+function toggleVerify(i){
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  data[i].verified = !data[i].verified;
+  localStorage.setItem("bandhanProfiles", JSON.stringify(data));
+  loadProfiles();
+}
+
+// ---- EDIT PROFILE ----
+function editProfile(i){
+  editIndex = i;
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  const p = data[i];
+
+  const labels = {
+    fullName:"Full Name", fatherName:"Father's Name", motherName:"Mother's Name",
+    profileFor:"Profile For", gender:"Gender", dob:"Date of Birth",
+    height:"Height", diet:"Diet", maritalStatus:"Marital Status",
+    religion:"Religion", community:"Community", motherTongue:"Mother Tongue",
+    education:"Education", occupation:"Occupation", income:"Income",
+    city:"City", policestation:"Police Station", state:"State",
+    pin:"Pin", email:"Email", phone:"Phone", about:"About", preferences:"Preferences"
+  };
+
+  const fields = Object.keys(p).filter(k=>k!=="photo" && k!=="id" && k!=="verified");
+  let html = "";
+  fields.forEach(f=>{
+    html += `
+      <p>
+        <label><strong>${labels[f]||f}:</strong></label><br>
+        <input name="${f}" value="${p[f]||""}" style="width:100%;padding:6px 8px;margin-top:4px;border:1px solid #ccc;border-radius:6px">
+      </p>`;
+  });
+
+  // photo field
+  html += `
+    <p>
+      <label><strong>Photo:</strong></label><br>
+      <input type="file" name="photo" accept="image/*">
+      ${p.photo ? `<br><img src="${p.photo}" style="max-width:80px;margin-top:6px;border-radius:6px">` : ""}
+    </p>`;
+
+  document.getElementById("editFields").innerHTML = html;
+  document.getElementById("editModal").classList.add("open");
+}
+
+function closeEdit(){
+  document.getElementById("editModal").classList.remove("open");
+}
+
+document.getElementById("editForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  let p = data[editIndex];
+
+  const fd = new FormData(this);
+  fd.forEach((val,key)=>{
+    if(key !== "photo"){
+      p[key] = val;
+    }
+  });
+
+  const photoFile = fd.get("photo");
+  if(photoFile && photoFile.size > 0){
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      p.photo = ev.target.result;
+      data[editIndex] = p;
+      localStorage.setItem("bandhanProfiles", JSON.stringify(data));
+      loadProfiles();
+      closeEdit();
+    };
+    reader.readAsDataURL(photoFile);
+  } else {
+    data[editIndex] = p;
+    localStorage.setItem("bandhanProfiles", JSON.stringify(data));
+    loadProfiles();
+    closeEdit();
+  }
+});
+
+// ---- DELETE PROFILE ----
+function deleteProfile(i){
+  if(!confirm("Delete this profile?")) return;
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  data.splice(i,1);
+  localStorage.setItem("bandhanProfiles", JSON.stringify(data));
+  loadProfiles();
+}
+
+// ---- EXPORT CSV ----
+function exportCSV(){
+  const data = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+  if(!data.length){ alert("No data to export!"); return; }
+  const headers = Object.keys(data[0]);
+  const csv = [
+    headers.join(","), 
+    ...data.map(p=> headers.map(h=> `"${(p[h]||"").toString().replace(/"/g,'""')}"`).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csv], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "profiles.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
