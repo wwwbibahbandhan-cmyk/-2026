@@ -131,58 +131,80 @@
     <div class="body" id="profileBody"></div>
   </div>
 </div>
-
 <script>
-let profiles = JSON.parse(localStorage.getItem("bandhanProfiles")||"[]");
+// --- কনফিগারেশন ---
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytA-WJELlOmQe2qiuMaCmZXqVF50WqNIaSEgqKLeYi-gD3phj93gA7iN1bgLFHcPR7/exec";
+let profiles = [];
 
 const cardsEl = document.getElementById("cards");
 
+// --- ১. Google Sheet থেকে ডেটা লোড করা ---
+async function loadProfilesFromSheet() {
+  cardsEl.innerHTML = "<p style='text-align:center;width:100%'>Loading profiles...</p>";
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const allData = await response.json();
+    
+    // শুধুমাত্র ভেরিফাইড প্রোফাইলগুলো সার্চে দেখাবে
+    profiles = allData.filter(p => p.status === "verified");
+    render(profiles);
+  } catch (error) {
+    console.error("Error:", error);
+    cardsEl.innerHTML = "<p>Error loading profiles. Please try again.</p>";
+  }
+}
+
+// --- ২. কার্ড টেমপ্লেট ---
 function cardTemplate(p){
   const el = document.createElement("div");
   el.className = "card";
   el.innerHTML = `
     <div class="cover">
-      <div class="pill">${p.verified? "✔ Verified":"New"}</div>
+      <div class="pill">${p.status === 'verified' ? '✔ Verified' : 'New'}</div>
       <div class="avatar">
-        ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : (p.fullName||"NA").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase()}
+        ${p.photo && p.photo !== "" 
+          ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` 
+          : (p.fullName||"NA").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase()}
       </div>
     </div>
     <div class="content">
-      <strong>${p.fullName||"Unknown"}</strong>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${p.fullName||"Unknown"}</strong>
+        <small style="color:#8b1e3f">#${p.id || ""}</small>
+      </div>
       <div class="meta">
         ${p.age? `<span>${p.age} yrs</span>`:""}
         ${p.height? `<span>${p.height} cm</span>`:""}
         <span>${p.city||""}${p.state? ", "+p.state:""}</span>
       </div>
       <div class="meta">
-        ${p.education? `<span>${p.education}</span>`:""}
+        ${p.religion? `<span>${p.religion}</span>`:""}
         ${p.occupation? `<span>${p.occupation}</span>`:""}
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-ghost" data-action="shortlist">Shortlist</button>
-      <button class="btn btn-primary" data-action="view">View</button>
+      <button class="btn btn-ghost" onclick="toast('Added to shortlist')">Shortlist</button>
+      <button class="btn btn-primary" onclick='openProfile(${JSON.stringify(p)})'>View</button>
     </div>`;
-  el.querySelector('[data-action="view"]').addEventListener("click",()=>openProfile(p));
   return el;
 }
 
 function render(list){
   cardsEl.innerHTML = "";
   if(!list.length){
-    cardsEl.innerHTML = "<p>No profiles found.</p>";
+    cardsEl.innerHTML = "<p style='text-align:center;width:100%'>No profiles found matching your criteria.</p>";
     return;
   }
   list.forEach(p=>cardsEl.appendChild(cardTemplate(p)));
 }
-render(profiles);
 
-// Search filter
-document.getElementById("filterForm").addEventListener("submit",e=>{
+// --- ৩. সার্চ ফিল্টার লজিক ---
+document.getElementById("filterForm").addEventListener("submit", e => {
   e.preventDefault();
   const fd = new FormData(e.target);
   const f = Object.fromEntries(fd.entries());
-  const results = profiles.filter(p=>{
+  
+  const results = profiles.filter(p => {
     if(f.ageMin && p.age < +f.ageMin) return false;
     if(f.ageMax && p.age > +f.ageMax) return false;
     if(f.gender && p.gender !== f.gender) return false;
@@ -193,25 +215,31 @@ document.getElementById("filterForm").addEventListener("submit",e=>{
   render(results);
 });
 
-// Profile modal
+// --- ৪. প্রোফাইল ডিটেইলস দেখা ---
 function openProfile(p){
-  document.getElementById("profileName").textContent = p.fullName||"Profile";
+  document.getElementById("profileName").textContent = p.fullName || "Profile";
   document.getElementById("profileBody").innerHTML = `
-    <img src="${p.photo||""}" alt="photo">
+    <div style="text-align:center;margin-bottom:15px">
+      ${p.photo ? `<img src="${p.photo}" style="max-width:250px;border-radius:15px">` : ""}
+    </div>
     <div class="info">
-      <p><strong>Age:</strong> ${p.age||""}</p>
-      <p><strong>Gender:</strong> ${p.gender||""}</p>
-      <p><strong>Religion:</strong> ${p.religion||""}</p>
-      <p><strong>Education:</strong> ${p.education||""}</p>
-      <p><strong>Occupation:</strong> ${p.occupation||""}</p>
-      <p><strong>City:</strong> ${p.city||""}, ${p.state||""}</p>
-      <p><strong>About:</strong> ${p.about||""}</p>
+      <p><strong>Age/Gender:</strong> ${p.age || ""} yrs / ${p.gender || ""}</p>
+      <p><strong>Religion:</strong> ${p.religion || ""} ${p.community ? " • "+p.community : ""}</p>
+      <p><strong>Education:</strong> ${p.education || ""}</p>
+      <p><strong>Occupation:</strong> ${p.occupation || ""}</p>
+      <p><strong>Income:</strong> ${p.income || ""}</p>
+      <p><strong>Location:</strong> ${p.city || ""}, ${p.state || ""}</p>
+      <p><strong>About:</strong> ${p.about || "No description provided."}</p>
     </div>
   `;
   document.getElementById("profileModal").classList.add("open");
 }
-function closeProfile(){document.getElementById("profileModal").classList.remove("open");}
-</script>
 
+function closeProfile(){ document.getElementById("profileModal").classList.remove("open"); }
+function toast(msg){ alert(msg); } // সহজ টোস্ট মেসেজ
+
+// পেজ লোড হলে কল হবে
+window.onload = loadProfilesFromSheet;
+</script>
 </body>
 </html>

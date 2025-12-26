@@ -495,30 +495,45 @@
   </div>
   </div>
 
+<script>
+// --- Configuration ---
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytA-WJELlOmQe2qiuMaCmZXqVF50WqNIaSEgqKLeYi-gD3phj93gA7iN1bgLFHcPR7/exec";
+let profiles = [];
 
-  <script>
-// --- Load profiles dynamically from localStorage ---
-let profiles = JSON.parse(localStorage.getItem("bandhanProfiles") || "[]");
-
-// fallback demo data...
-if (!profiles.length) {
-  profiles = [
-    {id:"BND1001", fullName:"Priya Sharma", age:26, city:"Mumbai", state:"Maharashtra", height:163, education:"MBA", occupation:"Marketing", religion:"Hindu", community:"Brahmin", verified:true},
-    {id:"BND1002", fullName:"Ananya Gupta", age:24, city:"Delhi", state:"Delhi", height:160, education:"B.Tech", occupation:"Software", religion:"Hindu", community:"Baniya", verified:true}
-  ];
+// --- ১. Google Sheet থেকে ডেটা লোড করা (No Demo Data) ---
+async function loadProfilesFromSheet() {
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = '<p style="text-align:center; width:100%; color:#666;">Loading profiles...</p>';
+  
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const allData = await response.json();
+    
+    // শুধুমাত্র যাদের status 'verified', তাদের দেখাবে
+    profiles = allData.filter(p => p.status === "verified");
+    
+    render(profiles);
+    
+    if (profiles.length === 0) {
+      cardsEl.innerHTML = '<p style="text-align:center; width:100%; color:#666;">No verified profiles available at the moment.</p>';
+    }
+  } catch (error) {
+    console.error("Error loading data:", error);
+    cardsEl.innerHTML = '<p style="text-align:center; width:100%; color:red;">Failed to connect to server.</p>';
+  }
 }
 
 const cardsEl = document.getElementById('cards');
 
-// --- Card template ---
+// --- ২. প্রোফাইল কার্ড টেমপ্লেট ---
 function cardTemplate(p){
   const el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = `
     <div class="cover">
-      <div class="pill">${p.verified? '✔ Verified':'New'}</div>
+      <div class="pill">${p.status === 'verified' ? '✔ Verified' : 'New'}</div>
       <div class="avatar">
-        ${p.photo 
+        ${p.photo && p.photo !== "" 
           ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
           : (p.fullName || "NA").split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
       </div>
@@ -530,19 +545,18 @@ function cardTemplate(p){
       </div>
       <div class="meta">
         ${p.age? `<span>${p.age} yrs</span>`:""}
-        ${p.height? `<span>${p.height} cm</span>`:""}
         <span>${p.city||""}${p.state? ', '+p.state:""}</span>
       </div>
       <div class="meta" style="margin-top:0">
-        ${p.education? `<span>${p.education}</span>`:""}
+        ${p.religion? `<span>${p.religion}</span>`:""}
         ${p.occupation? `<span>${p.occupation}</span>`:""}
-        ${p.religion? `<span>${p.religion}${p.community? ' · '+p.community:''}</span>`:""}
       </div>
     </div>
     <div class="actions">
       <button class="btn btn-ghost" data-action="shortlist">Shortlist</button>
       <button class="btn btn-primary" data-action="view">View</button>
     </div>`;
+  
   el.querySelector('[data-action="view"]').addEventListener('click',()=>openProfile(p));
   el.querySelector('[data-action="shortlist"]').addEventListener('click', (e)=>{
     e.target.textContent = 'Shortlisted ✓';
@@ -556,88 +570,15 @@ function render(list, limitDefault=true){
   cardsEl.innerHTML = '';
   const displayList = (limitDefault && list.length > 8) ? list.slice(0,8) : list;
   displayList.forEach(p=>cardsEl.appendChild(cardTemplate(p)));
-
-  if(limitDefault && list.length > 8){
-    const note = document.createElement("div");
-    note.style.textAlign = "center";
-    note.style.marginTop = "12px";
-    note.innerHTML = `<small style="color:#666">Showing 8 featured profiles. Use search to see more.</small>`;
-    cardsEl.appendChild(note);
-  }
 }
-render(profiles);
 
-// --- Quick search ---
-const qForm = document.getElementById('quickSearch');
-document.getElementById('applySearch').addEventListener('click', ()=>{
-  const fd = new FormData(qForm);
-  const q = Object.fromEntries(fd.entries());
-  const out = profiles.filter(p => {
-    if(q.seeking && p.seeking !== q.seeking) return false;
-    if(q.ageMin && p.age < +q.ageMin) return false;
-    if(q.ageMax && p.age > +q.ageMax) return false;
-    if(q.religion && p.religion !== q.religion) return false;
-    if(q.community && !p.community.toLowerCase().includes(q.community.toLowerCase())) return false;
-    if(q.location){
-      const t = (p.city + ' ' + p.state).toLowerCase();
-      if(!t.includes(q.location.toLowerCase())) return false;
-    }
-    return true;
-  });
-  render(out, false);
-});
-document.getElementById('resetSearch').addEventListener('click', ()=>{ qForm.reset(); render(profiles); });
-
-// --- Profile modal open/close ---
-function openProfile(p){
-  document.getElementById("profileName").textContent = p.fullName || "Profile";
-  document.getElementById("profileBody").innerHTML = `
-    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
-      <div style="flex:2;min-width:260px">
-        <p><strong>Age:</strong> ${p.age||""} yrs</p>
-        <p><strong>Height:</strong> ${p.height||""} cm</p>
-        <p><strong>Gender:</strong> ${p.gender||""}</p>
-        <p><strong>Religion:</strong> ${p.religion||""} ${p.community? " • "+p.community:""}</p>
-        <p><strong>Mother Tongue:</strong> ${p.motherTongue||""}</p>
-        <p><strong>Diet:</strong> ${p.diet||""}</p>
-        <p><strong>Education:</strong> ${p.education||""}</p>
-        <p><strong>Occupation:</strong> ${p.occupation||""}</p>
-        <p><strong>Income:</strong> ${p.income||""}</p>
-        <p><strong>City:</strong> ${p.city||""}, ${p.state||""}</p>
-        <p><strong>About:</strong> ${p.about||""}</p>
-        <p><strong>Preferences:</strong> ${p.preferences||""}</p>
-      </div>
-      <div style="flex:1;min-width:220px;max-width:280px;text-align:center">
-        ${p.photo 
-          ? `<img src="${p.photo}" alt="${p.fullName}" style="width:100%;border-radius:18px;box-shadow:0 4px 12px rgba(0,0,0,.2)">`
-          : `<div class="avatar" style="margin:auto;font-size:2rem;width:140px;height:180px">
-              ${(p.fullName||"NA").split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
-             </div>`}
-      </div>
-    </div>`;
-  document.getElementById("profileModal").classList.add("open");
-}
-function closeProfile(){ document.getElementById("profileModal").classList.remove("open"); }
-const profileModal = document.getElementById("profileModal");
-profileModal.addEventListener("click", e=>{ if(e.target===profileModal) closeProfile(); });
-window.addEventListener("keydown", e=>{ if(e.key==="Escape") closeProfile(); });
-
-// --- Modal: Create Profile ---
-const joinModal = document.getElementById('joinModal');
-document.getElementById('openJoin').addEventListener('click', ()=> joinModal.classList.add('open'));
-document.getElementById('openJoin2').addEventListener('click', ()=> joinModal.classList.add('open'));
-document.getElementById('cancelJoin').addEventListener('click', ()=> joinModal.classList.remove('open'));
-document.getElementById('closeJoin').addEventListener('click', ()=> joinModal.classList.remove('open'));
-joinModal.addEventListener('click', (e)=>{ if(e.target===joinModal) joinModal.classList.remove('open'); });
-window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') joinModal.classList.remove('open'); });
-
-// --- Save profile ---
+// --- ৩. প্রোফাইল শিটে সেভ করা (Submit Form) ---
 const joinForm = document.getElementById('joinForm');
-joinForm.addEventListener('submit', (e)=>{
+joinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const fd = new FormData(joinForm);
   const data = Object.fromEntries(fd.entries());
-  data.age = calculateAge(data.dob);
+  
   let ok = true;
   ['fullName','gender','dob','email'].forEach(n=>{
     const el = joinForm.elements[n];
@@ -645,62 +586,108 @@ joinForm.addEventListener('submit', (e)=>{
     else el.classList.remove('error');
   });
   if(!ok){ toast('Please fill required fields'); return; }
-  data.id = "BND" + String(Math.floor(1000 + Math.random()*9000));
+
+  data.id = "BND" + Math.floor(1000 + Math.random()*9000);
+  data.age = calculateAge(data.dob);
+
   const photoFile = document.getElementById('photo').files[0];
   if (photoFile) {
     const reader = new FileReader();
-    reader.onload = function(e) {
-      data.photo = e.target.result;
-      saveProfile(data);
+    reader.onload = async function(ev) {
+      data.photo = ev.target.result;
+      await sendToSheet(data);
     };
     reader.readAsDataURL(photoFile);
   } else {
-    saveProfile(data);
+    await sendToSheet(data);
   }
 });
 
-function saveProfile(profile){
-  if(profile.dob){ profile.age = calculateAge(profile.dob); }
-  profiles.push(profile);
-  localStorage.setItem("bandhanProfiles", JSON.stringify(profiles));
-  render(profiles);
-  toast('Profile saved!');
-  joinModal.classList.remove('open');
-  joinForm.reset();
-  document.getElementById('photoPreview').innerHTML = '';
-}
-
-// --- Toast ---
-const toastEl = document.getElementById('toast');
-function toast(msg){
-  toastEl.textContent = msg; toastEl.classList.add('show');
-  setTimeout(()=> toastEl.classList.remove('show'), 2000);
-}
-
-// --- Preview photo ---
-function previewPhoto(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById('photoPreview').innerHTML =
-        `<img src="${e.target.result}" alt="Profile Photo"
-          style="max-width:120px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.2)">`;
-    };
-    reader.readAsDataURL(file);
+async function sendToSheet(profileData) {
+  toast("Submitting profile...");
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(profileData)
+    });
+    
+    toast('Submitted! Waiting for admin approval.');
+    document.getElementById('joinModal').classList.remove('open');
+    joinForm.reset();
+    document.getElementById('photoPreview').innerHTML = '';
+  } catch (err) {
+    toast("Error: Could not save profile.");
   }
 }
 
-// --- Age calculation ---
 function calculateAge(dob){
   const birth = new Date(dob);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
+  if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) { age--; }
   return age;
 }
-</script>
 
+function openProfile(p){
+  document.getElementById("profileName").textContent = p.fullName || "Profile";
+  document.getElementById("profileBody").innerHTML = `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:2;min-width:260px">
+        <p><strong>Age:</strong> ${p.age||""} yrs</p>
+        <p><strong>Religion:</strong> ${p.religion||""}</p>
+        <p><strong>City:</strong> ${p.city||""}, ${p.state||""}</p>
+        <p><strong>Occupation:</strong> ${p.occupation||""}</p>
+        <p><strong>About:</strong> ${p.about||""}</p>
+      </div>
+      <div style="flex:1;min-width:220px;max-width:280px">
+        ${p.photo ? `<img src="${p.photo}" style="width:100%;border-radius:18px;">` : ""}
+      </div>
+    </div>`;
+  document.getElementById("profileModal").classList.add("open");
+}
+
+function closeProfile(){ document.getElementById("profileModal").classList.remove("open"); }
+const toastEl = document.getElementById('toast');
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 3000);
+}
+
+window.onload = loadProfilesFromSheet;
+
+/* ===== CREATE PROFILE MODAL CONTROL ===== */
+
+const joinModal = document.getElementById("joinModal");
+const openJoin = document.getElementById("openJoin");
+const openJoin2 = document.getElementById("openJoin2");
+const closeJoin = document.getElementById("closeJoin");
+const cancelJoin = document.getElementById("cancelJoin");
+
+/* Open modal */
+function openJoinModal(e){
+  if(e) e.preventDefault();
+  joinModal.classList.add("open");
+  joinModal.setAttribute("aria-hidden", "false");
+}
+
+/* Close modal */
+function closeJoinModal(){
+  joinModal.classList.remove("open");
+  joinModal.setAttribute("aria-hidden", "true");
+}
+
+/* Event bindings */
+openJoin.addEventListener("click", openJoinModal);
+openJoin2.addEventListener("click", openJoinModal);
+closeJoin.addEventListener("click", closeJoinModal);
+cancelJoin.addEventListener("click", closeJoinModal);
+
+/* Background click close */
+joinModal.addEventListener("click", (e)=>{
+  if(e.target === joinModal){
+    closeJoinModal();
+  }
+});
+</script>
 </body>
 </html>
